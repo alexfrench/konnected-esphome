@@ -1,0 +1,118 @@
+####
+##
+## Konnected Alarm Panel Pro (ESP32)
+## Firmware configuration for ESPHome
+##
+## filename: alarm-panel-pro-esp32.yaml
+## GitHub: https://github.com/konnected-io/konnected-esphome
+## Buy Konnected hardware: https://konnected.io
+## Help & Support: https://help@konnected.io (support is provided for purchasers of Konnected hardware)
+##
+## Copyright© 2023 Konnected Inc.
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
+## files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, 
+## modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+## is furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+## OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
+## LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR 
+## IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##
+####
+
+####
+# GENERAL SETTINGS
+# Customize these variables to your preferences and needs
+# more: https://esphome.io/guides/configuration-types.html#substitutions
+substitutions:
+  # ETHERNET CONFIG
+  # Uncomment one of the two lines below depending on your hardware version.
+  ethernet_type: LAN8720 # Alarm Panel Pro up to 1.7
+  # ethernet_type: RTL8201 # Alarm Panel Pro 1.8 and up
+
+####
+# PACKAGES
+# Each package includes the alarm panel feature
+# Remove or comment out any packages that you do not need or want.
+# If you're developing/installing locally, replace the github package line with the local package include above it.
+packages:
+
+  remote_package:
+    url: http://github.com/konnected-io/konnected-esphome
+    ref: master
+    refresh: 5min
+    files:
+
+      ####
+      # CORE
+      # This package is required and sets up core features.
+      - packages/alarm-panel-esp32-base.yaml
+
+      ####
+      # ETHERNET
+      # Enables ethernet connectivity.
+      - packages/ethernet.yaml
+
+      ####
+      # STATUS LED
+      # Enables the onboard blue status LED as an activity/error indicator
+      - packages/status-led.yaml
+
+      ####
+      # INPUT ZONES
+      - packages/alarm-panel/zone1.yaml
+      - packages/alarm-panel/zone2.yaml
+      - packages/alarm-panel/zone3.yaml
+      - packages/alarm-panel/zone4.yaml
+      - packages/alarm-panel/zone5.yaml
+      - packages/alarm-panel/zone6.yaml
+      - packages/alarm-panel/zone7.yaml
+      - packages/alarm-panel/zone8.yaml
+      - packages/alarm-panel/zone9.yaml
+      - packages/alarm-panel/zone10.yaml
+      - packages/alarm-panel/zone11.yaml
+      - packages/alarm-panel/zone12.yaml
+
+      ####
+      # OUTPUTS
+      - packages/alarm-panel/alarm1.yaml
+      - packages/alarm-panel/alarm2.yaml
+
+      ####
+      # WARNING BEEP
+      # Enables a 'Warning Beep' entity, intended to be used with a piezo buzzer. This is 
+      # implemented using a light entity with strobe effect to create a repeated beeping sound.
+      - packages/warning-beep.yaml
+  
+  
+dashboard_import:
+  package_import_url: github://konnected-io/konnected-esphome/alarm-panel-pro-esp32-ethernet.yaml@master
+  import_full_config: false
+
+####
+# WEB SEVER
+# Enables the built-in web server for viewing the device state, internals and controls via web browser
+# on the same local network as the device.
+web_server:
+  include_internal: true
+
+#### 
+# LOGGER
+# more: https://esphome.io/components/logger.html
+logger:
+
+####
+# NATIVE API for HOME ASSISTANT
+# Enables the native API for Home Assistant
+# more: https://esphome.io/components/api.html
+api:
+
+#### 
+# OTA UPDATES
+# Enables over-the-air updates
+# more: https://esphome.io/components/ota.html
+ota:

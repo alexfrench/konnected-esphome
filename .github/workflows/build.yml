@@ -1,0 +1,186 @@
+name: Build
+
+on: 
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  release:
+    types: [created]
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    name: Build
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install ESPHome
+        run: | 
+          pip3 install wheel
+          pip3 install esphome
+          echo "esphome_version=$(esphome version) >> $GITHUB_OUTPUT"
+          mkdir assets
+      
+      - id: alarm-panel-esp8266-version
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: './packages/alarm-panel-esp8266-base.yaml'
+          key-path: '["substitutions", "project_version"]'
+
+      - id: alarm-panel-esp32-version
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: './packages/alarm-panel-esp32-base.yaml'
+          key-path: '["substitutions", "project_version"]'
+
+      - id: garage-door-esp8266-version
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: './garage-door-esp8266.yaml'
+          key-path: '["substitutions", "project_version"]'
+
+      - id: garage-door-esp32-version
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: './garage-door-esp32.yaml'
+          key-path: '["substitutions", "project_version"]'
+  
+      - name: Build Alarm Panel ESP8266
+        id: build-alarm-panel-esp8266
+        run: | 
+          esphome compile release/alarm-panel-esp8266.yaml
+          build_path=release/.esphome/build/alarm-panel/.pioenvs/alarm-panel
+          fname=konnected-esphome-alarm-panel-esp8266-${{ steps.alarm-panel-esp8266-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+          
+      - name: Build Alarm Panel ESP32 (WiFi)
+        id: build-alarm-panel-pro-esp32-wifi
+        run: |
+          esphome compile release/alarm-panel-pro-esp32-wifi.yaml
+          build_path=release/.esphome/build/alarm-panel-pro/.pioenvs/alarm-panel-pro
+          fname=konnected-esphome-alarm-panel-esp32-wifi-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+
+      - name: Build Alarm Panel ESP32 (LAN8720)
+        id: build-alarm-panel-pro-esp32-lan8720
+        run: |
+          esphome compile release/alarm-panel-pro-esp32-lan8720.yaml
+          build_path=release/.esphome/build/alarm-panel-pro/.pioenvs/alarm-panel-pro
+          fname=konnected-esphome-alarm-panel-esp32-lan8720-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+
+      - name: Build Alarm Panel ESP32 (RTL8201)
+        id: build-alarm-panel-pro-esp32-rtl8201
+        run: |
+          esphome compile release/alarm-panel-pro-esp32-rtl8201.yaml
+          build_path=release/.esphome/build/alarm-panel-pro/.pioenvs/alarm-panel-pro
+          fname=konnected-esphome-alarm-panel-esp32-rtl8201-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+
+      - name: Build Garage Door ESP8266
+        id: build-garage-door-esp8266
+        run: |
+          esphome compile release/garage-door-esp8266.yaml
+          build_path=release/.esphome/build/garage-door/.pioenvs/garage-door
+          fname=konnected-esphome-garage-door-esp8266-${{ steps.garage-door-esp8266-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+      
+      - name: Build Garage Door ESP32
+        id: build-garage-door-esp32
+        run: |
+          esphome compile release/garage-door-esp32.yaml
+          build_path=release/.esphome/build/garage-door/.pioenvs/garage-door
+          fname=konnected-esphome-garage-door-esp32-${{ steps.garage-door-esp32-version.outputs.data }}.bin
+          cp $build_path/firmware-factory.bin assets/$fname
+  
+      - uses: keithweaver/aws-s3-github-action@v1.0.0
+        name: Upload Builds
+        with:
+          command: cp
+          source: assets/
+          destination: s3://konnected-io/builds/esphome/
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: us-east-2
+          flags: --recursive --acl public-read
+
+      - name: Get release
+        if: github.event.release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload asset to release
+        if: github.event.release
+        uses: bgpat/release-asset-action@03b0c30db1c4031ce3474740b0e4275cd7e126a3
+        with:
+          pattern: "assets/*"
+          release-url: ${{ steps.get_release.outputs.upload_url }}
+          allow-overwrite: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - run: mkdir -p install-konnected/manifests
+        if: github.event.release  
+
+      - name: Build Manifest for Alarm Panel / WiFi
+        if: github.event.release  
+        run: |
+          ruby ./scripts/update-espwebtools-manifests.rb
+        env:
+          MANIFEST_NAME: Konnected Alarm Panel for ESPHome (WiFi)
+          MANIFEST_FNAME: esphome-alarm-panel-wifi.json
+          MANIFEST_VERSION: "${{ steps.alarm-panel-esp8266-version.outputs.data }} / ${{ steps.alarm-panel-esp32-version.outputs.data }}"
+          ESP8266_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-alarm-panel-esp8266-${{ steps.alarm-panel-esp8266-version.outputs.data }}.bin
+          ESP32_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-alarm-panel-esp32-wifi-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+
+      - name: Build Manifest for Garage Door
+        if: github.event.release  
+        run: |
+          ruby ./scripts/update-espwebtools-manifests.rb
+        env:
+          MANIFEST_NAME: Konnected Garage Door for ESPHome (WiFi)
+          MANIFEST_FNAME: esphome-garage-door-wifi.json
+          MANIFEST_VERSION: "${{ steps.garage-door-esp8266-version.outputs.data }}"
+          ESP8266_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-garage-door-esp8266-${{ steps.garage-door-esp8266-version.outputs.data }}.bin
+          ESP32_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-garage-door-esp32-${{ steps.garage-door-esp32-version.outputs.data }}.bin
+
+      - name: Build Manifest for Alarm Panel / LAN8720
+        if: github.event.release  
+        run: |
+          ruby ./scripts/update-espwebtools-manifests.rb
+        env:
+          MANIFEST_NAME: Konnected Alarm Panel for ESPHome (LAN8720)
+          MANIFEST_FNAME: esphome-alarm-panel-lan8720.json
+          MANIFEST_VERSION: "${{ steps.alarm-panel-esp32-version.outputs.data }}"
+          ESP32_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-alarm-panel-esp32-lan8720-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+
+      - name: Build Manifest for Alarm Panel / RTL8201
+        if: github.event.release  
+        run: |
+          ruby ./scripts/update-espwebtools-manifests.rb
+        env:
+          MANIFEST_NAME: Konnected Alarm Panel for ESPHome (RTL8201)
+          MANIFEST_FNAME: esphome-alarm-panel-rtl8201.json
+          MANIFEST_VERSION: "${{ steps.alarm-panel-esp32-version.outputs.data }}"
+          ESP32_IMAGE_URI: https://konnected-io.s3.us-east-2.amazonaws.com/builds/esphome/konnected-esphome-alarm-panel-esp32-rtl8201-${{ steps.alarm-panel-esp32-version.outputs.data }}.bin
+      
+      - name: Deploy
+        if: github.event.release  
+        uses: lbertenasco/s3-deploy@v1
+        with:
+          folder: install-konnected
+          bucket: install-konnected
+          dist-id: E2FDL2RANMI9J7
+          invalidation: /manifests/*
+
