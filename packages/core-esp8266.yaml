@@ -7,7 +7,6 @@ esphome:
   project:
     name: $project_name
     version: $project_version
-  compile_process_limit: "1"
 
 substitutions:
   status_led_inverted: "true"
