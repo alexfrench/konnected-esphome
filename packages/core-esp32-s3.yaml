@@ -1,6 +1,7 @@
 esphome:
   name: $name
   name_add_mac_suffix: true
+  compile_process_limit: "1"
   project:
     name: $project_name
     version: $project_version
