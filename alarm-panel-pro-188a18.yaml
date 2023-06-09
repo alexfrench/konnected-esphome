@@ -1,0 +1,13 @@
+esphome:
+  name: ${name}
+  name_add_mac_suffix: false
+  compile_process_limit: "1"
+substitutions:
+  name: alarm-panel-pro-188a18
+  ethernet_type: LAN8720
+packages:
+  alarm_panel_pro_esp32: github://alexfrench/konnected-esphome/alarm-panel-pro-esp32-ethernet.yaml
+
+api:
+  encryption:
+    key: vf+PXWzUtRmtKS2OhU6L0fuIaSoV+ebkBJjWQ9S/380=
