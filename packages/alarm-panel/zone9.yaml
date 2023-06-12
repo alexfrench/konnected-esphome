@@ -1,7 +1,7 @@
 binary_sensor:
 
   - id: zone9
-    name: Zone 9    
+    name: Zone FamilyRm    
     pin:
       number: $zone9
       mode: INPUT

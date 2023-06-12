@@ -1,7 +1,7 @@
 binary_sensor:
 
   - id: zone8
-    name: Zone 8    
+    name: Zone Bed1    
     pin:
       number: $zone8
       mode: INPUT

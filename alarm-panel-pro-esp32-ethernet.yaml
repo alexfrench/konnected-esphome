@@ -90,7 +90,7 @@ packages:
   
   
 dashboard_import:
-  package_import_url: github://konnected-io/konnected-esphome/alarm-panel-pro-esp32-ethernet.yaml@master
+  package_import_url: github://alexfrench/konnected-esphome//alarm-panel-pro-esp32-ethernet.yaml@master
   import_full_config: false
 
 ####
