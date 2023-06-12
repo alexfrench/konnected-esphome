@@ -42,8 +42,8 @@ substitutions:
 packages:
 
   remote_package:
-    url: http://github.com/konnected-io/konnected-esphome
-    ref: master
+    url: http://github.com/alexfrench/konnected-esphome
+    ref: main
     refresh: 5min
     files:
 
@@ -90,7 +90,7 @@ packages:
   
   
 dashboard_import:
-  package_import_url: github://alexfrench/konnected-esphome//alarm-panel-pro-esp32-ethernet.yaml@master
+  package_import_url: github://alexfrench/konnected-esphome//alarm-panel-pro-esp32-ethernet.yaml@main
   import_full_config: false
 
 ####
