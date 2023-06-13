@@ -4,7 +4,7 @@
 ## Firmware configuration for ESPHome
 ##
 ## filename: alarm-panel-esp8266.yaml
-## GitHub: https://github.com/konnected-io/konnected-esphome
+## GitHub: https://github.com/alexfrench/konnected-esphome
 ## Buy Konnected hardware: https://konnected.io
 ## Help & Support: https://help@konnected.io (support is provided for purchasers of Konnected hardware)
 ##
@@ -31,7 +31,7 @@
 packages:
 
   remote_package:
-    url: http://github.com/konnected-io/konnected-esphome
+    url: http://github.com/alexfrench/konnected-esphome
     ref: master
     refresh: 5min
     files:

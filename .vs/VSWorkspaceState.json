@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\packages\\alarm-panel",
+    "\\release",
+    "\\scripts"
   ],
-  "SelectedNode": "\\alarm-panel-pro-188a18.yaml",
   "PreviewInSolutionExplorer": false
 }

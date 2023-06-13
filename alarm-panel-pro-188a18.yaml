@@ -6,7 +6,7 @@ substitutions:
   name: alarm-panel-pro-188a18
   ethernet_type: LAN8720
 packages:
-  alarm_panel_pro_esp32: github://alexfrench/konnected-esphome/alarm-panel-pro-esp32-ethernet.yaml
+  alarm_panel_pro_esp32: !include packages/alarm-panel-pro-esp32-ethernet.yaml
 
 api:
   encryption:
